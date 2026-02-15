@@ -1,256 +1,110 @@
-import { SearchMethod } from "../types";
+import { BookLocation, SearchMethod } from "../types";
 
-const DICTIONARY = [
-    "el",
-    "la",
-    "de",
-    "que",
-    "y",
-    "en",
-    "un",
-    "ser",
-    "a",
-    "ella",
-    "él",
-    "amor",
-    "futuro",
-    "tiempo",
-    "vida",
-    "corazón",
-    "alma",
-    "eterno",
-    "luz",
-    "sombra",
-    "espejo",
-    "laberinto",
-    "libro",
-    "página",
-    "palabra",
-    "universo",
-    "infinito",
-    "ciego",
-    "azar",
-    "destino",
-    "camino",
-    "buscar",
-    "encontrar",
-    "perder",
-    "olvido",
-    "memoria",
-    "fuego",
-    "agua",
-    "aire",
-    "tierra",
-    "cielo",
-    "mar",
-    "noche",
-    "día",
-    "sueño",
-    "realidad",
-    "ficción",
-    "historia",
-    "nosotros",
-    "juntos",
-    "siempre",
-    "nunca",
-    "tal",
-    "vez",
-    "acaso",
-    "quizás",
-    "porque",
-    "para",
-    "con",
-    "sin",
-    "sobre",
-    "bajo",
-    "ante",
-    "entre",
-    "hacia",
-    "hasta",
-    "desde",
-    "durante",
-    "contra",
-    "donde",
-    "cuando",
-    "quien",
-    "como",
-    "cual",
-    "cuyo",
-    "aquí",
-    "allí",
-    "ahora",
-    "entonces",
-    "luego",
-    "tan",
-    "más",
-    "menos",
-    "muy",
-    "mucho",
-    "poco",
-    "todo",
-    "nada",
-    "algo",
-    "alguien",
-    "nadie",
-    "alguno",
-    "ninguno",
-    "otro",
-    "mismo",
-    "propio",
-    "ajeno",
-    "grande",
-    "pequeño",
-    "bueno",
-    "malo",
-    "nuevo",
-    "viejo",
-    "joven",
-    "mayor",
-    "menor",
-    "mejor",
-    "peor",
-    "alto",
-    "largo",
-    "corto",
-    "ancho",
-    "estrecho",
-    "fuerte",
-    "débil",
-    "rico",
-    "pobre",
-    "feliz",
-    "triste",
-    "bello",
-    "feo",
-    "dulce",
-    "amargo",
-    "caliente",
-    "frío",
-    "claro",
-    "oscuro",
-    "susurro",
-    "grito",
-    "silencio",
-    "eco",
-    "voz",
-    "canción",
-    "poema",
-    "verso",
-    "letra",
-    "escrito",
-    "papel",
-    "tinta",
-    "pluma",
-    "mano",
-    "dedo",
-    "ojo",
-    "mirada",
-    "boca",
-    "beso",
-    "abrazo",
-    "piel",
-    "cuerpo",
-    "sangre",
-    "hueso",
-    "mente",
-    "pensamiento",
-    "idea",
-    "razón",
-    "locura",
-    "verdad",
-    "mentira",
-    "secreto",
-    "misterio",
-    "enigma",
-    "clave",
-    "llave",
-    "puerta",
-    "ventana",
-    "muro",
-    "pared",
-    "techo",
-    "suelo",
-    "paso",
-    "huella",
-    "rastro",
-    "mapa",
-    "brújula",
-    "norte",
-    "sur",
-    "este",
-    "oeste",
-    "arriba",
-    "abajo",
-    "dentro",
-    "fuera",
-    "lejos",
-    "cerca",
-    "ayer",
-    "mañana",
-    "hoy",
-    "eterno",
-    "instante",
-    "momento",
-    "siglo",
-    "año",
-    "mes",
-    "semana",
-    "hora",
-    "minuto",
-    "segundo",
-];
+const ALPHABET = "abcdefghijklmnopqrstuvwxyz, .";
+const PAGE_LINES = 40;
+const CHARS_PER_LINE = 80;
+const PAGE_LENGTH = PAGE_LINES * CHARS_PER_LINE;
 
-const CHARS = "abcdefghijklmnopqrstuvwxyz, .";
+class SplitMix32 {
+    private state: number;
+
+    constructor(seed: number) {
+        this.state = seed | 0;
+    }
+
+    public next(): number {
+        this.state = (this.state + 0x9e3779b9) | 0;
+        let z = this.state;
+        z = (z ^ (z >>> 16)) * 0x85ebca6b;
+        z = (z ^ (z >>> 13)) * 0xc2b2ae35;
+        z = z ^ (z >>> 16);
+        return (z >>> 0) / 4294967296;
+    }
+
+    public nextInt(min: number, max: number): number {
+        return Math.floor(this.next() * (max - min + 1)) + min;
+    }
+}
+
+const cyrb53 = (str: string, seed = 0) => {
+    let h1 = 0xdeadbeef ^ seed,
+        h2 = 0x41c6ce57 ^ seed;
+    for (let i = 0, ch; i < str.length; i++) {
+        ch = str.charCodeAt(i);
+        h1 = Math.imul(h1 ^ ch, 2654435761);
+        h2 = Math.imul(h2 ^ ch, 1597334677);
+    }
+    h1 =
+        Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^
+        Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+    h2 =
+        Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^
+        Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+    return 4294967296 * (2097151 & h2) + (h1 >>> 0);
+};
 
 export interface BabelPageData {
     content: string;
+    location: BookLocation;
     startIndex: number;
     endIndex: number;
 }
 
+const normalizeToBabel = (text: string): string => {
+    return text
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/\n/g, " ")
+        .replace(/[^a-z, .]/g, " ");
+};
+
 export const generateBabelPage = (
-    searchText: string,
+    userText: string,
     method: SearchMethod = "spanish_words",
 ): BabelPageData => {
-    const PAGE_LENGTH = 3200;
-    let content = "";
+    const seed = cyrb53(userText);
+    const rng = new SplitMix32(seed);
 
-    while (content.length < PAGE_LENGTH + 100) {
-        if (method === "spanish_words") {
-            const word =
-                DICTIONARY[Math.floor(Math.random() * DICTIONARY.length)];
-            content += word + " ";
+    let hexName = "";
+    const hexChars = "0123456789abcdefghijklmnopqrstuvwxyz";
+    for (let i = 0; i < 32; i++) {
+        hexName += hexChars[rng.nextInt(0, 35)];
+    }
+
+    const location: BookLocation = {
+        hex: hexName,
+        wall: rng.nextInt(1, 4),
+        shelf: rng.nextInt(1, 5),
+        volume: rng.nextInt(1, 32),
+        page: rng.nextInt(1, 410),
+    };
+
+    const cleanSearch = normalizeToBabel(userText).replace(/\s+/g, " ").trim();
+
+    const pageContentArray = new Array(PAGE_LENGTH);
+    const alphabetLen = ALPHABET.length;
+
+    const validLength = Math.min(cleanSearch.length, PAGE_LENGTH);
+    const maxIndex = Math.max(0, PAGE_LENGTH - validLength);
+    const insertIndex = rng.nextInt(0, maxIndex);
+
+    for (let i = 0; i < PAGE_LENGTH; i++) {
+        const charIndex = rng.nextInt(0, alphabetLen - 1);
+
+        if (i < insertIndex || i >= insertIndex + validLength) {
+            pageContentArray[i] = ALPHABET[charIndex];
         } else {
-            let chunk = "";
-            for (let i = 0; i < 50; i++) {
-                chunk += CHARS.charAt(Math.floor(Math.random() * CHARS.length));
-            }
-            content += chunk;
+            pageContentArray[i] = cleanSearch[i - insertIndex];
         }
     }
 
-    let baseContent = content.slice(0, PAGE_LENGTH);
-
-    let cleanSearch = searchText;
-
-    if (method === "spanish_words") {
-        cleanSearch = searchText.replace(/\s+/g, " ").trim();
-    } else {
-        cleanSearch = searchText.toLowerCase().replace(/[^a-z, .]/g, "");
-        if (cleanSearch.length === 0) cleanSearch = "vacio";
-    }
-
-    const maxIndex = Math.max(0, baseContent.length - cleanSearch.length);
-    const insertIndex = Math.floor(Math.random() * maxIndex);
-
-    const before = baseContent.slice(0, insertIndex);
-    const after = baseContent.slice(insertIndex + cleanSearch.length);
-
-    const fullPage = before + cleanSearch + after;
+    const finalContent = pageContentArray.join("");
 
     return {
-        content: fullPage,
+        content: finalContent,
+        location,
         startIndex: insertIndex,
-        endIndex: insertIndex + cleanSearch.length,
+        endIndex: insertIndex + validLength,
     };
 };

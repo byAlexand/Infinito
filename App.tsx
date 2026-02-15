@@ -5,7 +5,7 @@ import EchoResult from "./components/EchoResult";
 import { Infinity } from "lucide-react";
 
 const STATIC_LIBRARIAN_RESPONSE =
-    "En algún libro de una biblioteca infinita se encuentra alguna historia nuestra aquí descrita.";
+    "En algún libro de esta biblioteca infinita se encuentra alguna historia nuestra aquí descrita.";
 
 const App: React.FC = () => {
     const [appState, setAppState] = useState<AppState>(AppState.IDLE);

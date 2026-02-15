@@ -20,7 +20,7 @@ const LibrarySearchForm: React.FC<LibrarySearchFormProps> = ({
         }
     };
 
-    const methodCode = searchMethod === "spanish_words" ? "w" : "x";
+    const methodCode = "x";
 
     return (
         <div className="mt-12 flex flex-col items-center">

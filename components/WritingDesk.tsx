@@ -119,6 +119,7 @@ const WritingDesk: React.FC<WritingDeskProps> = ({
 
                 <div className="relative group">
                     <textarea
+                        autoFocus
                         value={text}
                         onChange={(e) => setText(e.target.value)}
                         onKeyDown={handleKeyDown}
