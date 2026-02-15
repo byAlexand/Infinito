@@ -9,7 +9,6 @@ interface LibrarySearchFormProps {
 
 const LibrarySearchForm: React.FC<LibrarySearchFormProps> = ({
     searchText,
-    searchMethod = "spanish_words",
 }) => {
     const formRef = useRef<HTMLFormElement>(null);
 

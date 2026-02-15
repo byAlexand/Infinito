@@ -63,7 +63,12 @@ export const generateBabelPage = (
     userText: string,
     method: SearchMethod = "spanish_words",
 ): BabelPageData => {
-    const seed = cyrb53(userText);
+    const seedString =
+        userText +
+        (method === "random_characters"
+            ? "_chaos_entropy"
+            : "_standard_entropy");
+    const seed = cyrb53(seedString);
     const rng = new SplitMix32(seed);
 
     let hexName = "";
