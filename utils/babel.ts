@@ -94,11 +94,34 @@ export const generateBabelPage = (
     const maxIndex = Math.max(0, PAGE_LENGTH - validLength);
     const insertIndex = rng.nextInt(0, maxIndex);
 
+    let currentWordLen = 0;
+    let targetWordLen = rng.nextInt(3, 8);
+    const vowels = "aeiou";
+    const consonants = "bcdfghjklmnpqrstvwxyz";
+
     for (let i = 0; i < PAGE_LENGTH; i++) {
-        const charIndex = rng.nextInt(0, alphabetLen - 1);
+        let noiseChar = "";
+
+        if (method === "spanish_words") {
+            if (currentWordLen >= targetWordLen) {
+                noiseChar = " ";
+                currentWordLen = 0;
+                targetWordLen = rng.nextInt(2, 9);
+            } else {
+                if (rng.next() < 0.45) {
+                    noiseChar = vowels[rng.nextInt(0, 4)];
+                } else {
+                    noiseChar = consonants[rng.nextInt(0, 20)];
+                }
+                currentWordLen++;
+            }
+        } else {
+            const charIndex = rng.nextInt(0, alphabetLen - 1);
+            noiseChar = ALPHABET[charIndex];
+        }
 
         if (i < insertIndex || i >= insertIndex + validLength) {
-            pageContentArray[i] = ALPHABET[charIndex];
+            pageContentArray[i] = noiseChar;
         } else {
             pageContentArray[i] = cleanSearch[i - insertIndex];
         }
