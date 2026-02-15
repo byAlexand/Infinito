@@ -1,5 +1,5 @@
 import React, { useRef } from "react";
-import { Search, ExternalLink } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import { SearchMethod } from "../types";
 
 interface LibrarySearchFormProps {
