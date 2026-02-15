@@ -18,9 +18,9 @@ const WritingDesk: React.FC<WritingDeskProps> = ({
     const [text, setText] = useState("");
     const [opacity, setOpacity] = useState("opacity-0");
 
-    // Easter egg
     const [heartClicks, setHeartClicks] = useState(0);
     const [showSeal, setShowSeal] = useState(false);
+    const [hasActivated, setHasActivated] = useState(false);
 
     useEffect(() => {
         const timer = setTimeout(() => setOpacity("opacity-100"), 200);
@@ -38,7 +38,9 @@ const WritingDesk: React.FC<WritingDeskProps> = ({
         const newCount = heartClicks + 1;
         setHeartClicks(newCount);
         if (newCount >= 8) {
-            setShowSeal(true);
+            setHasActivated(true);
+
+            setTimeout(() => setShowSeal(true), 50);
             setHeartClicks(0);
         }
     };
@@ -55,26 +57,39 @@ const WritingDesk: React.FC<WritingDeskProps> = ({
         }
     };
 
+    let buttonStyles =
+        "border-zinc-800 opacity-30 cursor-not-allowed bg-transparent";
+
+    if (isProcessing) {
+        buttonStyles = "opacity-80 cursor-wait bg-zinc-800/20 border-zinc-700";
+    } else if (text.trim().length > 0) {
+        buttonStyles =
+            "border-zinc-800 hover:border-zinc-500 hover:bg-zinc-800/40 hover:shadow-[0_0_25px_rgba(255,255,255,0.08)] cursor-pointer opacity-100";
+    }
+
     return (
         <div
             className={`w-full max-w-2xl mx-auto transition-all duration-1000 ${opacity}`}
         >
-            <div
-                className={`fixed inset-0 flex flex-col items-center justify-center z-50 pointer-events-none transition-all duration-1000 ease-[cubic-bezier(0.22,1,0.36,1)] ${showSeal ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-95 translate-y-8"}`}
-            >
-                <div className="relative mb-4 md:mb-8 group">
-                    <div className="bg-zinc-100/95 backdrop-blur-xl text-zinc-900 px-8 py-6 md:px-12 md:py-8 rounded-[2rem] shadow-[0_20px_50px_-12px_rgba(255,255,255,0.25)] border border-white/60 max-w-[90vw] mx-4 relative z-10">
-                        <p className="text-xl md:text-4xl font-serif font-medium text-center tracking-wide leading-tight">
-                            Feliz 14 de febrero 🦭🩷🖤
-                        </p>
-                    </div>
-                    <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-6 h-6 bg-zinc-100/95 border-b border-r border-white/60 rotate-45 z-0 shadow-sm"></div>
-                </div>
+            {hasActivated && (
+                <div
+                    className={`fixed inset-0 flex flex-col items-center justify-center z-50 pointer-events-none transition-all duration-1000 ease-[cubic-bezier(0.22,1,0.36,1)] ${showSeal ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-95 translate-y-8"}`}
+                >
+                    <div className="relative mb-4 md:mb-8 group">
+                        <div className="bg-zinc-100/95 backdrop-blur-xl text-zinc-900 px-8 py-6 md:px-12 md:py-8 rounded-[2rem] shadow-[0_20px_50px_-12px_rgba(255,255,255,0.25)] border border-white/60 max-w-[90vw] mx-4 relative z-10">
+                            <p className="text-xl md:text-4xl font-serif font-medium text-center tracking-wide leading-tight">
+                                Feliz 14 de febrero 🦭🩷🖤
+                            </p>
+                        </div>
 
-                <div className="text-[10rem] md:text-[20rem] drop-shadow-2xl filter animate-[pulse_4s_infinite] select-none leading-none opacity-90">
-                    🦭
+                        <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-6 h-6 bg-zinc-100/95 border-b border-r border-white/60 rotate-45 z-0 shadow-sm"></div>
+                    </div>
+
+                    <div className="text-[10rem] md:text-[20rem] drop-shadow-2xl filter animate-[pulse_4s_infinite] select-none leading-none opacity-90">
+                        🦭
+                    </div>
                 </div>
-            </div>
+            )}
 
             <div className="backdrop-blur-md bg-zinc-900/40 p-8 md:p-14 shadow-[0_10px_50px_-10px_rgba(0,0,0,0.5)] rounded-[2.5rem] border border-zinc-800/60 relative overflow-hidden group-hover:border-zinc-700/60 transition-colors">
                 <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
@@ -145,14 +160,9 @@ const WritingDesk: React.FC<WritingDeskProps> = ({
                         disabled={!text.trim() || isProcessing}
                         className={`
               flex items-center gap-3 px-10 py-4 
-              border border-zinc-800 rounded-full
+              border rounded-full
               transition-all duration-500
-              ${
-                  !text.trim() || isProcessing
-                      ? "opacity-80 cursor-wait bg-zinc-800/20 border-zinc-700"
-                      : "hover:border-zinc-500 hover:bg-zinc-800/40 hover:shadow-[0_0_25px_rgba(255,255,255,0.08)] cursor-pointer"
-              }
-              ${!text.trim() && !isProcessing ? "opacity-30 cursor-not-allowed bg-transparent" : ""}
+              ${buttonStyles}
             `}
                     >
                         <span
